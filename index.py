@@ -30,33 +30,39 @@ def generate_images(image_index, chapter_text, font_path, bold_font_path, font_s
         for line in lines:
             words = line.split(" ")
             formatted_line = ""
+            bold_text = ""
+            current_x = 50  # x-coordinate to place regular and bold text
+
             for word in words:
                 if word.startswith("**") and word.endswith("**"):
                     # Render the regular part of the line first
-                    draw.text((50, current_height), formatted_line.strip(), font=font, fill="black")
-                    # Update the current height to move after the regular text
-                    formatted_line_width = draw.textbbox((0, 0), formatted_line, font=font)[2]
-                    current_height += font_size + line_spacing
+                    if formatted_line.strip():  # If there's text before bold word
+                        draw.text((current_x, current_height), formatted_line.strip(), font=font, fill="black")
+                        formatted_line_width = draw.textbbox((0, 0), formatted_line.strip(), font=font)[2]
+                        current_x += formatted_line_width  # Move the x position for the next part
 
                     # Now render the bold text
-                    bold_text = word.strip("**")
-                    bold_text_width = draw.textbbox((0, 0), bold_text, font=bold_font)[2]
+                    bold_word = word.strip("**")
                     draw.text(
-                        (50 + formatted_line_width, current_height),
-                        bold_text,
+                        (current_x, current_height),
+                        bold_word,
                         font=bold_font,
                         fill="black",
                     )
-                    # Update the height after the bold text
-                    current_height += font_size + line_spacing
-                    formatted_line = ""  # Reset formatted line after processing bold text
+                    # Update current_x after drawing the bold text
+                    bold_word_width = draw.textbbox((0, 0), bold_word, font=bold_font)[2]
+                    current_x += bold_word_width  # Move the x position after bold text
+                    formatted_line = ""  # Reset regular text after processing bold word
                 else:
                     formatted_line += word + " "
 
-            # Render the remaining regular text at the current height
+            # After looping through all words, render the remaining regular text if any
             if formatted_line.strip():
-                draw.text((50, current_height), formatted_line.strip(), font=font, fill="black")
-                current_height += font_size + line_spacing
+                draw.text((current_x, current_height), formatted_line.strip(), font=font, fill="black")
+                current_x += draw.textbbox((0, 0), formatted_line.strip(), font=font)[2]
+
+            # Update the current height for the next line
+            current_height += font_size + line_spacing
 
         # Save the image to a buffer
         buffer = io.BytesIO()
