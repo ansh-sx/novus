@@ -1,8 +1,11 @@
+__ == "__main__":
+    app.run(debug=True)
 from flask import Flask, request, jsonify
 from PIL import Image, ImageDraw, ImageFont
 import textwrap
 import io
 import os
+import base64
 
 app = Flask(__name__)
 
@@ -78,8 +81,11 @@ def generate_images(image_index, chapter_text, font_path, bold_font_path, font_s
 
             # Check if the current height exceeds the page height, meaning we need a new page
             if current_height + font_size + line_spacing > image_height:
-                img.save(f"{image_index}_page_{page_number}.jpg")
-                output_images.append(f"{image_index}_page_{page_number}.jpg")
+                # Save the image to a BytesIO object instead of writing to a file
+                img_byte_arr = io.BytesIO()
+                img.save(img_byte_arr, format='JPEG')
+                img_byte_arr.seek(0)  # Go to the beginning of the byte array
+                output_images.append(base64.b64encode(img_byte_arr.read()).decode('utf-8'))
                 page_number += 1
                 image_index += 1  # Move to the next image
                 img = Image.open(f"{image_index}.jpg")  # Load the next image
@@ -88,8 +94,10 @@ def generate_images(image_index, chapter_text, font_path, bold_font_path, font_s
 
         # Save the final page if it's not empty
         if current_height > 50:  # If there's any content on the last page
-            img.save(f"{image_index}_page_{page_number}.jpg")
-            output_images.append(f"{image_index}_page_{page_number}")
+            img_byte_arr = io.BytesIO()
+            img.save(img_byte_arr, format='JPEG')
+            img_byte_arr.seek(0)  # Go to the beginning of the byte array
+            output_images.append(base64.b64encode(img_byte_arr.read()).decode('utf-8'))
 
     return output_images
 
@@ -110,13 +118,7 @@ def generate_chapter():
         images = generate_images(image_index, chapter_text, font_path, bold_font_path, font_size, char_limit_per_line, char_limit_per_page)
 
         # Return the images as a response
-        response_images = []
-        for i, img_path in enumerate(images):
-            with open(img_path, "rb") as img_file:
-                img_data = img_file.read().hex()
-                response_images.append({"page": i + 1, "image": img_data})
-
-        return jsonify({"pages": len(images), "images": response_images})
+        return jsonify({"pages": len(images), "images": images})
     except Exception as e:
         return jsonify({"error": str(e)})
 
