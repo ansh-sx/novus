@@ -64,8 +64,8 @@ def generate_chapter():
     image_index = data.get("image")  # Index of the image template (e.g., "1")
     chapter_text = data.get("chapter")  # Chapter text
 
-    font_path = "regular_font.ttf"  # Regular font path
-    bold_font_path = "bold_font.ttf"  # Bold font path
+    font_path = "t.ttf"  # Regular font path
+    bold_font_path = "tb.ttf"  # Bold font path
     font_size = 24
     char_limit = 300
 
