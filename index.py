@@ -61,7 +61,7 @@ def generate_chapter():
     chapter_text = data.get("chapter")  # Chapter text
 
     font_path = "t.ttf"  # Regular font path
-    bold_font_path = "t.ttf"  # Bold font path
+    bold_font_path = "tb.ttf"  # Bold font path
     font_size = 24
     char_limit = 300
 
