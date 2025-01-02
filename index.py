@@ -1,5 +1,4 @@
-__ == "__main__":
-    app.run(debug=True)
+
 from flask import Flask, request, jsonify
 from PIL import Image, ImageDraw, ImageFont
 import textwrap
