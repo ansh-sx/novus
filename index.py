@@ -15,38 +15,48 @@ def generate_images(image_index, chapter_text, font_path, bold_font_path, font_s
         image_path = f"{image_index}.jpg"
         img = Image.open(image_path)
         draw = ImageDraw.Draw(img)
-        current_height = 50  # Starting y-coordinate
-        line_spacing = 10
+        current_height = 50  # Starting y-coordinate for text
+        line_spacing = 10  # Space between lines
 
         # Load fonts
-        font = ImageFont.truetype(font_path, font_size)
-        bold_font = ImageFont.truetype(bold_font_path, font_size)
+        try:
+            font = ImageFont.truetype(font_path, font_size)
+            bold_font = ImageFont.truetype(bold_font_path, font_size)
+        except IOError as e:
+            return {"error": f"Font file not found or cannot be loaded: {str(e)}"}
 
-        # Process text and split into lines
+        # Split the text into lines based on the character limit
         lines = page_text.split("\n")
         for line in lines:
             words = line.split(" ")
             formatted_line = ""
             for word in words:
                 if word.startswith("**") and word.endswith("**"):
-                    # Render regular text
+                    # Render the regular part of the line first
                     draw.text((50, current_height), formatted_line.strip(), font=font, fill="black")
-                    # Calculate the x-coordinate for bold text
+                    # Update the current height to move after the regular text
                     formatted_line_width = draw.textbbox((0, 0), formatted_line, font=font)[2]
-                    # Render bold text
+                    current_height += font_size + line_spacing
+
+                    # Now render the bold text
+                    bold_text = word.strip("**")
+                    bold_text_width = draw.textbbox((0, 0), bold_text, font=bold_font)[2]
                     draw.text(
                         (50 + formatted_line_width, current_height),
-                        word.strip("**"),
+                        bold_text,
                         font=bold_font,
                         fill="black",
                     )
-                    formatted_line = ""
+                    # Update the height after the bold text
+                    current_height += font_size + line_spacing
+                    formatted_line = ""  # Reset formatted line after processing bold text
                 else:
                     formatted_line += word + " "
 
-            # Render the remaining text
-            draw.text((50, current_height), formatted_line.strip(), font=font, fill="black")
-            current_height += font_size + line_spacing
+            # Render the remaining regular text at the current height
+            if formatted_line.strip():
+                draw.text((50, current_height), formatted_line.strip(), font=font, fill="black")
+                current_height += font_size + line_spacing
 
         # Save the image to a buffer
         buffer = io.BytesIO()
@@ -64,8 +74,8 @@ def generate_chapter():
     image_index = data.get("image")  # Index of the image template (e.g., "1")
     chapter_text = data.get("chapter")  # Chapter text
 
-    font_path = "t.ttf"  # Regular font path
-    bold_font_path = "tb.ttf"  # Bold font path
+    font_path = "t.ttf"  # Font file in the root folder
+    bold_font_path = "tb.ttf"  # Font file in the root folder
     font_size = 24
     char_limit = 300
 
