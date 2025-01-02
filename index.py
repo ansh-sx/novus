@@ -1,7 +1,6 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify
 from PIL import Image, ImageDraw, ImageFont
 import textwrap
-import os
 import io
 
 app = Flask(__name__)
@@ -30,17 +29,22 @@ def generate_images(image_index, chapter_text, font_path, bold_font_path, font_s
             formatted_line = ""
             for word in words:
                 if word.startswith("**") and word.endswith("**"):
+                    # Render regular text
                     draw.text((50, current_height), formatted_line.strip(), font=font, fill="black")
-                    formatted_line = ""
+                    # Calculate the x-coordinate for bold text
+                    formatted_line_width = draw.textbbox((0, 0), formatted_line, font=font)[2]
+                    # Render bold text
                     draw.text(
-                        (50 + draw.textsize(formatted_line, font=font)[0], current_height),
+                        (50 + formatted_line_width, current_height),
                         word.strip("**"),
                         font=bold_font,
                         fill="black",
                     )
+                    formatted_line = ""
                 else:
                     formatted_line += word + " "
 
+            # Render the remaining text
             draw.text((50, current_height), formatted_line.strip(), font=font, fill="black")
             current_height += font_size + line_spacing
 
@@ -60,8 +64,8 @@ def generate_chapter():
     image_index = data.get("image")  # Index of the image template (e.g., "1")
     chapter_text = data.get("chapter")  # Chapter text
 
-    font_path = "t.ttf"  # Regular font path
-    bold_font_path = "tb.ttf"  # Bold font path
+    font_path = "regular_font.ttf"  # Regular font path
+    bold_font_path = "bold_font.ttf"  # Bold font path
     font_size = 24
     char_limit = 300
 
